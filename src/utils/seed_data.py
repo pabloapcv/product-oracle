@@ -190,21 +190,39 @@ def seed_sample_amazon_data(dt: date):
         },
     ]
     
+    import os
+    USE_SQLITE = os.getenv("USE_SQLITE", "false").lower() == "true"
+    param_style = "?" if USE_SQLITE else "%s"
+    true_value = "1" if USE_SQLITE else "TRUE"
+    
     with get_db_cursor() as cur:
         for listing in sample_listings:
-            cur.execute("""
+            query = f"""
                 INSERT INTO amazon_listings_daily (
                     dt, asin, title, brand, category, price_usd,
                     bsr, rating, review_count, seller_count, prime_flag,
                     image_count, video_flag, first_seen_date, last_seen_date
                 ) VALUES (
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, 1, TRUE, 5, FALSE, %s, %s
+                    {param_style}, {param_style}, {param_style}, {param_style}, {param_style}, {param_style}, 
+                    {param_style}, {param_style}, {param_style}, 1, {true_value}, 5, 0, {param_style}, {param_style}
                 )
+            """
+            if USE_SQLITE:
+                query += """
+                ON CONFLICT (dt, asin) DO UPDATE SET
+                    title = excluded.title,
+                    bsr = excluded.bsr,
+                    review_count = excluded.review_count
+                """
+            else:
+                query += """
                 ON CONFLICT (dt, asin) DO UPDATE SET
                     title = EXCLUDED.title,
                     bsr = EXCLUDED.bsr,
                     review_count = EXCLUDED.review_count
-            """, (
+                """
+            
+            cur.execute(query, (
                 dt, listing["asin"], listing["title"], listing["brand"],
                 listing["category"], listing["price_usd"], listing["bsr"],
                 listing["rating"], listing["review_count"], dt, dt
@@ -233,16 +251,30 @@ def seed_sample_tiktok_data(dt: date):
         {"query": "cat water fountain", "views": 380000, "videos": 950},
     ]
     
+    import os
+    USE_SQLITE = os.getenv("USE_SQLITE", "false").lower() == "true"
+    param_style = "?" if USE_SQLITE else "%s"
+    
     with get_db_cursor() as cur:
         for metric in sample_metrics:
-            cur.execute("""
+            query = f"""
                 INSERT INTO tiktok_metrics_daily (
                     dt, query, query_type, views, videos
-                ) VALUES (%s, %s, 'hashtag', %s, %s)
+                ) VALUES ({param_style}, {param_style}, 'hashtag', {param_style}, {param_style})
+            """
+            if USE_SQLITE:
+                query += """
+                ON CONFLICT (dt, query, query_type) DO UPDATE SET
+                    views = excluded.views,
+                    videos = excluded.videos
+                """
+            else:
+                query += """
                 ON CONFLICT (dt, query, query_type) DO UPDATE SET
                     views = EXCLUDED.views,
                     videos = EXCLUDED.videos
-            """, (dt, metric["query"], metric["views"], metric["videos"]))
+                """
+            cur.execute(query, (dt, metric["query"], metric["views"], metric["videos"]))
     
     logger.info(f"Seeded {len(sample_metrics)} sample TikTok metrics")
 

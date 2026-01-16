@@ -31,8 +31,11 @@ def compute_demand_features(entity_id: str, week_start: date) -> Dict[str, Any]:
     features = {}
     
     # Get entity aliases to find related data
+    from src.utils.query_helper import get_param_placeholder
+    
+    param = get_param_placeholder()
     aliases = execute_query(
-        "SELECT alias_text, source FROM entity_aliases WHERE entity_id = %s",
+        f"SELECT alias_text, source FROM entity_aliases WHERE entity_id = {param}",
         (entity_id,)
     )
     
@@ -41,14 +44,31 @@ def compute_demand_features(entity_id: str, week_start: date) -> Dict[str, Any]:
     
     if tiktok_queries:
         # Get TikTok metrics for last 28 days
-        query = """
-            SELECT dt, views, videos
-            FROM tiktok_metrics_daily
-            WHERE query = ANY(%s) AND query_type = 'hashtag'
-                AND dt >= %s - INTERVAL '28 days' AND dt < %s
-            ORDER BY dt DESC
-        """
-        tiktok_data = execute_query(query, (tiktok_queries, week_start, week_start))
+        import os
+        USE_SQLITE = os.getenv("USE_SQLITE", "false").lower() == "true"
+        
+        if USE_SQLITE:
+            placeholders = ",".join(["?"] * len(tiktok_queries))
+            query = f"""
+                SELECT dt, views, videos
+                FROM tiktok_metrics_daily
+                WHERE query IN ({placeholders}) AND query_type = 'hashtag'
+                    AND date(dt) >= date(?) AND date(dt) < date(?)
+                ORDER BY dt DESC
+            """
+            tiktok_data = execute_query(query, tuple(tiktok_queries) + (
+                (week_start - timedelta(days=28)).isoformat(),
+                week_start.isoformat()
+            ))
+        else:
+            query = """
+                SELECT dt, views, videos
+                FROM tiktok_metrics_daily
+                WHERE query = ANY(%s) AND query_type = 'hashtag'
+                    AND dt >= %s - INTERVAL '28 days' AND dt < %s
+                ORDER BY dt DESC
+            """
+            tiktok_data = execute_query(query, (tiktok_queries, week_start, week_start))
         
         # Aggregate views by date ranges
         views_7d = sum(row['views'] or 0 for row in tiktok_data 
@@ -92,19 +112,30 @@ def compute_demand_features(entity_id: str, week_start: date) -> Dict[str, Any]:
     if amazon_aliases:
         # Get Amazon listings mapped to this entity (via aliases or direct mapping)
         # For now, simplified - in production, use proper entity resolution
-        query = """
+        # Build query with SQLite/PostgreSQL compatibility
+        from src.utils.query_helper import convert_like_any, convert_any_clause, convert_date_interval, get_param_placeholder
+        
+        like_clause, like_params = convert_like_any("title", [f'%{alias}%' for alias in amazon_aliases])
+        brand_clause, brand_params = convert_any_clause("brand", amazon_aliases)
+        date_clause, date_param = convert_date_interval(week_start, "4 weeks")
+        param = get_param_placeholder()
+        
+        query = f"""
             SELECT bsr, review_count, dt
             FROM amazon_listings_daily
-            WHERE dt >= %s - INTERVAL '4 weeks' AND dt < %s
-                AND (title ILIKE ANY(%s) OR brand = ANY(%s))
-            ORDER BY bsr NULLS LAST
+            WHERE dt >= {date_clause} AND dt < {param}
+                AND ({like_clause} OR {brand_clause})
+            ORDER BY bsr
             LIMIT 10
         """
-        amazon_data = execute_query(query, (
-            week_start, week_start,
-            [f'%{alias}%' for alias in amazon_aliases],
-            amazon_aliases
-        ))
+        
+        # Combine parameters in correct order
+        if USE_SQLITE:
+            params = (date_param, week_start.isoformat()) + like_params + brand_params
+        else:
+            params = (date_param, week_start, like_params[0], brand_params[0])
+        
+        amazon_data = execute_query(query, params)
         
         if amazon_data:
             # Median BSR of top 10
