@@ -5,6 +5,7 @@ Fetches listings and reviews data and stores in raw tables.
 import argparse
 import json
 import logging
+import os
 import re
 import time
 from datetime import date, datetime
@@ -19,11 +20,17 @@ logger = logging.getLogger(__name__)
 # Rate limiting
 RATE_LIMIT_DELAY = 0.5  # seconds between requests
 MAX_RETRIES = 3
+RETRY_DELAY = 2  # seconds between retries
+
+# Amazon Product Advertising API (optional - set in environment)
+AMAZON_API_ACCESS_KEY = os.getenv("AMAZON_API_ACCESS_KEY")
+AMAZON_API_SECRET_KEY = os.getenv("AMAZON_API_SECRET_KEY")
+AMAZON_API_ASSOCIATE_TAG = os.getenv("AMAZON_API_ASSOCIATE_TAG")
 
 
-def fetch_amazon_listing_page(asin: str) -> Optional[Dict[str, Any]]:
+def fetch_amazon_via_api(asin: str) -> Optional[Dict[str, Any]]:
     """
-    Fetch a single Amazon listing page using web scraping.
+    Fetch Amazon listing via Product Advertising API (if credentials available).
     
     Args:
         asin: Amazon ASIN
@@ -31,23 +38,53 @@ def fetch_amazon_listing_page(asin: str) -> Optional[Dict[str, Any]]:
     Returns:
         Dictionary with listing data or None
     """
+    # TODO: Implement Amazon Product Advertising API v5
+    # This requires: boto3 and proper API credentials
+    # For now, return None to fall back to scraping
+    logger.debug("Amazon API not yet implemented, using web scraping")
+    return None
+
+
+def fetch_amazon_listing_page(asin: str, use_api: bool = False) -> Optional[Dict[str, Any]]:
+    """
+    Fetch a single Amazon listing page using web scraping or API.
+    
+    Args:
+        asin: Amazon ASIN
+        use_api: If True and API credentials available, use Product Advertising API
+        
+    Returns:
+        Dictionary with listing data or None
+    """
     logger.debug(f"Fetching listing for ASIN: {asin}")
+    
+    # Try API first if credentials available
+    if use_api and AMAZON_API_ACCESS_KEY and AMAZON_API_SECRET_KEY:
+        return fetch_amazon_via_api(asin)
+    
+    # Otherwise use web scraping
     time.sleep(RATE_LIMIT_DELAY)  # Rate limiting
     
     url = f"https://www.amazon.com/dp/{asin}"
     
     # Headers to mimic a browser
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
         'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
     }
     
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
+    # Retry logic
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = requests.get(url, headers=headers, timeout=15, allow_redirects=True)
+            response.raise_for_status()
         
         soup = BeautifulSoup(response.content, 'html.parser')
         
@@ -154,12 +191,22 @@ def fetch_amazon_listing_page(asin: str) -> Optional[Dict[str, Any]]:
             "video_flag": video_flag,
         }
         
-    except requests.exceptions.RequestException as e:
-        logger.warning(f"Request failed for ASIN {asin}: {e}")
-        return None
-    except Exception as e:
-        logger.error(f"Error parsing Amazon page for ASIN {asin}: {e}")
-        return None
+            break  # Success, exit retry loop
+            
+        except requests.exceptions.RequestException as e:
+            if attempt < MAX_RETRIES - 1:
+                logger.warning(f"Request failed for ASIN {asin} (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
+                time.sleep(RETRY_DELAY * (attempt + 1))  # Exponential backoff
+            else:
+                logger.error(f"Request failed for ASIN {asin} after {MAX_RETRIES} attempts: {e}")
+                return None
+        except Exception as e:
+            logger.error(f"Error parsing Amazon page for ASIN {asin}: {e}")
+            return None
+    else:
+        return None  # All retries exhausted
+    
+    try:
 
 
 def store_listing_raw(dt: date, asin: str, raw_data: Dict[str, Any]) -> None:
