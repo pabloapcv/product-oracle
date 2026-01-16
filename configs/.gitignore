@@ -1,0 +1,4 @@
+# Ignore sensitive config files
+secrets.yaml
+local.yaml
+

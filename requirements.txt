@@ -1,0 +1,29 @@
+# Core dependencies
+psycopg2-binary>=2.9.0
+python-dotenv>=1.0.0
+pyyaml>=6.0
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# ML
+lightgbm>=4.0.0
+scikit-learn>=1.3.0
+
+# NLP (optional, for innovation engine)
+sentence-transformers>=2.2.0
+transformers>=4.30.0
+
+# Utilities
+requests>=2.31.0
+beautifulsoup4>=4.12.0  # For web scraping if needed
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# Development
+black>=23.0.0
+flake8>=6.0.0
+

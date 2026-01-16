@@ -1,0 +1,59 @@
+# Winner Engine Configuration
+
+database:
+  host: ${DB_HOST:-localhost}
+  port: ${DB_PORT:-5432}
+  name: ${DB_NAME:-winner_engine}
+  user: ${DB_USER:-postgres}
+  password: ${DB_PASSWORD:-}
+
+ingestion:
+  amazon:
+    rate_limit_per_second: 2
+    max_retries: 3
+    seed_asins: []  # Add seed ASINs here
+  
+  tiktok:
+    rate_limit_per_second: 5
+    max_retries: 3
+    seed_queries: []  # Add seed hashtags/keywords here
+  
+  shopify:
+    rate_limit_per_second: 1
+    max_retries: 3
+    seed_stores: []  # Add seed store domains here
+
+features:
+  version: "v1.0"
+  lookback_weeks: 4
+  horizon_weeks: 8
+
+models:
+  classifier:
+    version: "v1.0"
+    target_label: "label_winner_8w"
+    class_weight: "balanced"
+  
+  ranker:
+    version: "v1.0"
+    metric: "ndcg"
+    ndcg_at: 50
+
+scoring:
+  top_n: 50
+  model_version: "v1.0"
+
+reports:
+  output_dir: "reports"
+  top_n: 50
+
+experiments:
+  thresholds:
+    shopify_fake_door:
+      ctr_min: 0.02
+      email_capture_min: 0.05
+    
+    tiktok_creative:
+      hold_rate_min: 0.30
+      comment_intent_min: 0.01
+
