@@ -5,22 +5,82 @@ services:
     image: postgres:14
     container_name: winner-engine-db
     environment:
-      POSTGRES_DB: winner_engine
-      POSTGRES_USER: winner_user
-      POSTGRES_PASSWORD: winner_password
+      POSTGRES_DB: ${DB_NAME:-winner_engine}
+      POSTGRES_USER: ${DB_USER:-winner_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-winner_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./sql:/docker-entrypoint-initdb.d
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U winner_user -d winner_engine"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-winner_user} -d ${DB_NAME:-winner_engine}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+    networks:
+      - winner-network
+
+  pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: winner-engine-pipeline
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_NAME: ${DB_NAME:-winner_engine}
+      DB_USER: ${DB_USER:-winner_user}
+      DB_PASSWORD: ${DB_PASSWORD:-winner_password}
+      DB_PORT: 5432
+    volumes:
+      - ./reports:/app/reports
+      - ./models:/app/models
+      - ./logs:/app/logs
+    networks:
+      - winner-network
+    command: python -m src.pipeline --week_start $(date +%Y-%m-%d)
+    restart: "no"  # Run once, don't restart
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: winner-engine-scheduler
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_NAME: ${DB_NAME:-winner_engine}
+      DB_USER: ${DB_USER:-winner_user}
+      DB_PASSWORD: ${DB_PASSWORD:-winner_password}
+      DB_PORT: 5432
+    volumes:
+      - ./reports:/app/reports
+      - ./models:/app/models
+      - ./logs:/app/logs
+      - ./scripts:/app/scripts
+    networks:
+      - winner-network
+    command: >
+      sh -c "
+        echo 'Setting up weekly cron job...' &&
+        echo '0 2 * * 1 cd /app && python -m src.pipeline --week_start \$(date +%Y-%m-%d) >> /app/logs/pipeline.log 2>&1' | crontab - &&
+        crontab -l &&
+        echo 'Starting cron daemon...' &&
+        crond -f
+      "
     restart: unless-stopped
 
 volumes:
   postgres_data:
     driver: local
+
+networks:
+  winner-network:
+    driver: bridge
 
