@@ -1,0 +1,15 @@
+# Shopify Store Domains to Track
+# Add one domain per line (without https://)
+# Examples:
+# store.example.com
+# brandname.com
+
+# How to find Shopify stores:
+# 1. Discover via TikTok ads
+# 2. Track competitor stores
+# 3. Monitor product launches
+# 4. Use store discovery tools
+
+# Note: Stores must have public product catalogs
+# Most Shopify stores expose /products.json endpoint
+

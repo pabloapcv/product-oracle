@@ -1,0 +1,18 @@
+# TikTok Queries to Track
+# Add one query per line (hashtags or keywords)
+# Examples:
+# portable blender
+# phone stand
+# yoga mat bag
+
+# How to find trending queries:
+# 1. Search TikTok for product-related hashtags
+# 2. Look at trending hashtags in your category
+# 3. Monitor competitor content
+# 4. Track product launch hashtags
+
+# Popular formats:
+# - Product names: "portable blender"
+# - Hashtags: "#portableblender"
+# - Problem keywords: "kitchen organization"
+
