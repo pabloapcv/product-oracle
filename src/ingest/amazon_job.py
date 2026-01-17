@@ -89,78 +89,78 @@ def fetch_amazon_listing_page(asin: str, use_api: bool = False) -> Optional[Dict
             soup = BeautifulSoup(response.content, 'html.parser')
             
             # Extract title
-        title_elem = soup.find('span', {'id': 'productTitle'})
-        title = title_elem.get_text(strip=True) if title_elem else None
-        
-        # Extract brand
-        brand_elem = soup.find('a', {'id': 'brand'}) or soup.find('span', class_='po-brand')
-        brand = brand_elem.get_text(strip=True) if brand_elem else None
-        if not brand:
-            # Try to extract from title or other places
-            brand = "Unknown"
-        
-        # Extract price
-        price = None
-        price_elem = soup.find('span', {'id': 'priceblock_ourprice'}) or \
-                     soup.find('span', {'id': 'priceblock_dealprice'}) or \
-                     soup.find('span', class_='a-price-whole')
-        if price_elem:
-            price_text = price_elem.get_text(strip=True)
-            # Extract numeric price
-            price_match = re.search(r'[\d,]+\.?\d*', price_text.replace(',', ''))
-            if price_match:
-                try:
-                    price = float(price_match.group().replace(',', ''))
-                except ValueError:
-                    pass
-        
-        # Extract rating
-        rating = None
-        rating_elem = soup.find('span', {'id': 'acrPopover'}) or \
-                     soup.find('span', class_='a-icon-alt')
-        if rating_elem:
-            rating_text = rating_elem.get_text(strip=True)
-            rating_match = re.search(r'(\d+\.?\d*)', rating_text)
-            if rating_match:
-                try:
-                    rating = float(rating_match.group(1))
-                except ValueError:
-                    pass
-        
-        # Extract review count
-        review_count = 0
-        review_elem = soup.find('span', {'id': 'acrCustomerReviewText'})
-        if review_elem:
-            review_text = review_elem.get_text(strip=True)
-            review_match = re.search(r'([\d,]+)', review_text.replace(',', ''))
-            if review_match:
-                try:
-                    review_count = int(review_match.group().replace(',', ''))
-                except ValueError:
-                    pass
-        
-        # Extract BSR (Best Seller Rank)
-        bsr = None
-        bsr_elem = soup.find('span', string=re.compile(r'Best Sellers Rank'))
-        if bsr_elem:
-            bsr_text = bsr_elem.find_next('span').get_text(strip=True) if bsr_elem.find_next('span') else ''
-            bsr_match = re.search(r'#([\d,]+)', bsr_text.replace(',', ''))
-            if bsr_match:
-                try:
-                    bsr = int(bsr_match.group(1).replace(',', ''))
-                except ValueError:
-                    pass
-        
-        # Extract category
-        category = None
-        category_elem = soup.find('a', {'id': 'wayfinding-breadcrumbs_feature_div'})
-        if category_elem:
-            categories = category_elem.find_all('a', class_='a-link-normal')
-            if categories:
-                category = categories[-1].get_text(strip=True)
-        
-        # Check for Prime
-        prime_flag = bool(soup.find('span', {'id': 'primeBadge_feature_div'}))
+            title_elem = soup.find('span', {'id': 'productTitle'})
+            title = title_elem.get_text(strip=True) if title_elem else None
+            
+            # Extract brand
+            brand_elem = soup.find('a', {'id': 'brand'}) or soup.find('span', class_='po-brand')
+            brand = brand_elem.get_text(strip=True) if brand_elem else None
+            if not brand:
+                # Try to extract from title or other places
+                brand = "Unknown"
+            
+            # Extract price
+            price = None
+            price_elem = soup.find('span', {'id': 'priceblock_ourprice'}) or \
+                         soup.find('span', {'id': 'priceblock_dealprice'}) or \
+                         soup.find('span', class_='a-price-whole')
+            if price_elem:
+                price_text = price_elem.get_text(strip=True)
+                # Extract numeric price
+                price_match = re.search(r'[\d,]+\.?\d*', price_text.replace(',', ''))
+                if price_match:
+                    try:
+                        price = float(price_match.group().replace(',', ''))
+                    except ValueError:
+                        pass
+            
+            # Extract rating
+            rating = None
+            rating_elem = soup.find('span', {'id': 'acrPopover'}) or \
+                         soup.find('span', class_='a-icon-alt')
+            if rating_elem:
+                rating_text = rating_elem.get_text(strip=True)
+                rating_match = re.search(r'(\d+\.?\d*)', rating_text)
+                if rating_match:
+                    try:
+                        rating = float(rating_match.group(1))
+                    except ValueError:
+                        pass
+            
+            # Extract review count
+            review_count = 0
+            review_elem = soup.find('span', {'id': 'acrCustomerReviewText'})
+            if review_elem:
+                review_text = review_elem.get_text(strip=True)
+                review_match = re.search(r'([\d,]+)', review_text.replace(',', ''))
+                if review_match:
+                    try:
+                        review_count = int(review_match.group().replace(',', ''))
+                    except ValueError:
+                        pass
+            
+            # Extract BSR (Best Seller Rank)
+            bsr = None
+            bsr_elem = soup.find('span', string=re.compile(r'Best Sellers Rank'))
+            if bsr_elem:
+                bsr_text = bsr_elem.find_next('span').get_text(strip=True) if bsr_elem.find_next('span') else ''
+                bsr_match = re.search(r'#([\d,]+)', bsr_text.replace(',', ''))
+                if bsr_match:
+                    try:
+                        bsr = int(bsr_match.group(1).replace(',', ''))
+                    except ValueError:
+                        pass
+            
+            # Extract category
+            category = None
+            category_elem = soup.find('a', {'id': 'wayfinding-breadcrumbs_feature_div'})
+            if category_elem:
+                categories = category_elem.find_all('a', class_='a-link-normal')
+                if categories:
+                    category = categories[-1].get_text(strip=True)
+            
+            # Check for Prime
+            prime_flag = bool(soup.find('span', {'id': 'primeBadge_feature_div'}))
         
         # Check for coupon
         coupon_flag = bool(soup.find('span', string=re.compile(r'coupon|save', re.I)))
