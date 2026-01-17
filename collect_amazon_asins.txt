@@ -1,19 +1,11 @@
-# Amazon ASINs to Track
-# Add one ASIN per line
-# Example ASINs (replace with real ones):
-# B08XYZ1234
-# B09ABC5678
+# Real Amazon ASINs from database
+# These are linked to entities in the system
 
-# How to find ASINs:
-# 1. Go to any Amazon product page
-# 2. Look in the URL: amazon.com/dp/B08XYZ1234
-# 3. The ASIN is the code after /dp/
-# 4. Or check the product details section
-
-# Popular product categories to track:
-# - Kitchen gadgets
-# - Phone accessories
-# - Fitness equipment
-# - Home organization
-# - Pet products
-
+B02STU9012
+B03PQR5678
+B04MNO1234
+B05JKL7890
+B06GHI3456
+B07DEF9012
+B08XYZ1234
+B09ABC5678
