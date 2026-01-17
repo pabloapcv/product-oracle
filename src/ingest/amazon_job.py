@@ -85,10 +85,10 @@ def fetch_amazon_listing_page(asin: str, use_api: bool = False) -> Optional[Dict
         try:
             response = requests.get(url, headers=headers, timeout=15, allow_redirects=True)
             response.raise_for_status()
-        
-        soup = BeautifulSoup(response.content, 'html.parser')
-        
-        # Extract title
+            
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # Extract title
         title_elem = soup.find('span', {'id': 'productTitle'})
         title = title_elem.get_text(strip=True) if title_elem else None
         
@@ -206,6 +206,7 @@ def fetch_amazon_listing_page(asin: str, use_api: bool = False) -> Optional[Dict
     else:
         return None  # All retries exhausted
     
+    # Parse the response
     try:
 
 
