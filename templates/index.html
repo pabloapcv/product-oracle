@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Winner Engine - Product Opportunity Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏆 Winner Engine</h1>
+            <p class="subtitle">Product Opportunity Discovery System</p>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-value" id="entity-count">-</div>
+                <div class="stat-label">Entities Tracked</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="amazon-count">-</div>
+                <div class="stat-label">Amazon Listings</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="tiktok-count">-</div>
+                <div class="stat-label">TikTok Metrics</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="latest-report">-</div>
+                <div class="stat-label">Latest Report</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <h2>Reports</h2>
+                <div id="reports-list" class="reports-list">
+                    <div class="loading">Loading reports...</div>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="content-header">
+                    <h2 id="content-title">Select a Report</h2>
+                    <div class="controls">
+                        <select id="week-select" class="select-input">
+                            <option value="">Select Week...</option>
+                        </select>
+                        <button id="refresh-btn" class="btn-primary">Refresh</button>
+                    </div>
+                </div>
+
+                <div id="opportunities-container" class="opportunities-container">
+                    <div class="empty-state">
+                        <p>👆 Select a week to view opportunities</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
+

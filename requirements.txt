@@ -1,29 +1,23 @@
-# Core dependencies
-psycopg2-binary>=2.9.0
-python-dotenv>=1.0.0
-pyyaml>=6.0
+# Winner Engine Dependencies
 
-# Data processing
-pandas>=2.0.0
-numpy>=1.24.0
+# Core
+psycopg2-binary>=2.9.0
+sqlite3
+
+# Web Scraping
+requests>=2.28.0
+beautifulsoup4>=4.11.0
+
+# Data Processing
+pandas>=1.5.0
+numpy>=1.23.0
 
 # ML
-lightgbm>=4.0.0
-scikit-learn>=1.3.0
+lightgbm>=3.3.0
+scikit-learn>=1.1.0
 
-# NLP (optional, for innovation engine)
-sentence-transformers>=2.2.0
-transformers>=4.30.0
+# Web Interface
+flask>=2.2.0
 
 # Utilities
-requests>=2.31.0
-beautifulsoup4>=4.12.0  # For web scraping if needed
-
-# Testing
-pytest>=7.4.0
-pytest-cov>=4.1.0
-
-# Development
-black>=23.0.0
-flake8>=6.0.0
-
+python-dotenv>=0.19.0
