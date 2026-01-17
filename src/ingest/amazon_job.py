@@ -219,9 +219,13 @@ def store_listing_raw(dt: date, asin: str, raw_data: Dict[str, Any]) -> None:
     with get_db_cursor() as cur:
         # Ensure partition exists (simplified - in production use pg_partman)
         try:
-            cur.execute("""
+            import os
+            USE_SQLITE = os.getenv("USE_SQLITE", "false").lower() == "true"
+            param = "?" if USE_SQLITE else "%s"
+            
+            cur.execute(f"""
                 INSERT INTO amazon_listings_raw (dt, asin, raw_json, fetched_at)
-                VALUES (%s, %s, %s, %s)
+                VALUES ({param}, {param}, {param}, {param})
             """, (dt, asin, json.dumps(raw_data), datetime.now()))
         except Exception as e:
             logger.error(f"Error storing raw listing for {asin}: {e}")
