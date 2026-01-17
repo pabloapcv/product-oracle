@@ -161,37 +161,37 @@ def fetch_amazon_listing_page(asin: str, use_api: bool = False) -> Optional[Dict
             
             # Check for Prime
             prime_flag = bool(soup.find('span', {'id': 'primeBadge_feature_div'}))
-        
-        # Check for coupon
-        coupon_flag = bool(soup.find('span', string=re.compile(r'coupon|save', re.I)))
-        
-        # Count images
-        image_elements = soup.find_all('img', {'id': re.compile(r'landingImage|main-image')})
-        image_count = len(image_elements)
-        
-        # Check for video
-        video_flag = bool(soup.find('div', {'id': 'dv-action-box-video-container'}))
-        
-        # Check seller count (simplified - would need more parsing)
-        seller_count = 1  # Default to 1, would need to check "Ships from and sold by" vs "Fulfilled by Amazon"
-        
-        return {
-            "asin": asin,
-            "title": title or f"Product {asin}",
-            "brand": brand or "Unknown",
-            "category": category or "Unknown",
-            "price": price,
-            "coupon_flag": coupon_flag,
-            "bsr": bsr,
-            "rating": rating,
-            "review_count": review_count,
-            "seller_count": seller_count,
-            "prime_flag": prime_flag,
-            "image_count": image_count,
-            "video_flag": video_flag,
-        }
-        
-            break  # Success, exit retry loop
+            
+            # Check for coupon
+            coupon_flag = bool(soup.find('span', string=re.compile(r'coupon|save', re.I)))
+            
+            # Count images
+            image_elements = soup.find_all('img', {'id': re.compile(r'landingImage|main-image')})
+            image_count = len(image_elements)
+            
+            # Check for video
+            video_flag = bool(soup.find('div', {'id': 'dv-action-box-video-container'}))
+            
+            # Check seller count (simplified - would need more parsing)
+            seller_count = 1  # Default to 1, would need to check "Ships from and sold by" vs "Fulfilled by Amazon"
+            
+            result = {
+                "asin": asin,
+                "title": title or f"Product {asin}",
+                "brand": brand or "Unknown",
+                "category": category or "Unknown",
+                "price": price,
+                "coupon_flag": coupon_flag,
+                "bsr": bsr,
+                "rating": rating,
+                "review_count": review_count,
+                "seller_count": seller_count,
+                "prime_flag": prime_flag,
+                "image_count": image_count,
+                "video_flag": video_flag,
+            }
+            
+            return result  # Success, return result
             
         except requests.exceptions.RequestException as e:
             if attempt < MAX_RETRIES - 1:
@@ -205,9 +205,6 @@ def fetch_amazon_listing_page(asin: str, use_api: bool = False) -> Optional[Dict
             return None
     else:
         return None  # All retries exhausted
-    
-    # Parse the response
-    try:
 
 
 def store_listing_raw(dt: date, asin: str, raw_data: Dict[str, Any]) -> None:
