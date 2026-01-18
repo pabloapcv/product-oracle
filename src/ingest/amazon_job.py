@@ -260,8 +260,12 @@ def parse_and_store_listing(dt: date, asin: str, raw_data: Dict[str, Any]) -> No
     }
     
     # Get first_seen_date from existing record or use current date
+    import os
+    USE_SQLITE = os.getenv("USE_SQLITE", "false").lower() == "true"
+    param = "?" if USE_SQLITE else "%s"
+    
     existing = execute_query(
-        "SELECT first_seen_date FROM amazon_listings_daily WHERE asin = %s ORDER BY dt DESC LIMIT 1",
+        f"SELECT first_seen_date FROM amazon_listings_daily WHERE asin = {param} ORDER BY dt DESC LIMIT 1",
         (asin,)
     )
     if existing:
@@ -272,33 +276,78 @@ def parse_and_store_listing(dt: date, asin: str, raw_data: Dict[str, Any]) -> No
     listing_data["last_seen_date"] = dt
     
     # Upsert into staging
+    import os
+    USE_SQLITE = os.getenv("USE_SQLITE", "false").lower() == "true"
+    
     with get_db_cursor() as cur:
-        cur.execute("""
-            INSERT INTO amazon_listings_daily (
-                dt, asin, title, brand, category, price_usd, coupon_flag,
-                bsr, rating, review_count, seller_count, prime_flag,
-                image_count, video_flag, first_seen_date, last_seen_date
-            ) VALUES (
-                %(dt)s, %(asin)s, %(title)s, %(brand)s, %(category)s,
-                %(price_usd)s, %(coupon_flag)s, %(bsr)s, %(rating)s,
-                %(review_count)s, %(seller_count)s, %(prime_flag)s,
-                %(image_count)s, %(video_flag)s, %(first_seen_date)s, %(last_seen_date)s
-            )
-            ON CONFLICT (dt, asin) DO UPDATE SET
-                title = EXCLUDED.title,
-                brand = EXCLUDED.brand,
-                category = EXCLUDED.category,
-                price_usd = EXCLUDED.price_usd,
-                coupon_flag = EXCLUDED.coupon_flag,
-                bsr = EXCLUDED.bsr,
-                rating = EXCLUDED.rating,
-                review_count = EXCLUDED.review_count,
-                seller_count = EXCLUDED.seller_count,
-                prime_flag = EXCLUDED.prime_flag,
-                image_count = EXCLUDED.image_count,
-                video_flag = EXCLUDED.video_flag,
-                last_seen_date = EXCLUDED.last_seen_date
-        """, listing_data)
+        if USE_SQLITE:
+            # SQLite version - use positional parameters
+            cur.execute("""
+                INSERT INTO amazon_listings_daily (
+                    dt, asin, title, brand, category, price_usd, coupon_flag,
+                    bsr, rating, review_count, seller_count, prime_flag,
+                    image_count, video_flag, first_seen_date, last_seen_date
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT (dt, asin) DO UPDATE SET
+                    title = excluded.title,
+                    brand = excluded.brand,
+                    category = excluded.category,
+                    price_usd = excluded.price_usd,
+                    coupon_flag = excluded.coupon_flag,
+                    bsr = excluded.bsr,
+                    rating = excluded.rating,
+                    review_count = excluded.review_count,
+                    seller_count = excluded.seller_count,
+                    prime_flag = excluded.prime_flag,
+                    image_count = excluded.image_count,
+                    video_flag = excluded.video_flag,
+                    last_seen_date = excluded.last_seen_date
+            """, (
+                listing_data["dt"],
+                listing_data["asin"],
+                listing_data["title"],
+                listing_data["brand"],
+                listing_data["category"],
+                listing_data["price_usd"],
+                listing_data["coupon_flag"],
+                listing_data["bsr"],
+                listing_data["rating"],
+                listing_data["review_count"],
+                listing_data["seller_count"],
+                listing_data["prime_flag"],
+                listing_data["image_count"],
+                listing_data["video_flag"],
+                listing_data["first_seen_date"],
+                listing_data["last_seen_date"],
+            ))
+        else:
+            # PostgreSQL version - use named parameters
+            cur.execute("""
+                INSERT INTO amazon_listings_daily (
+                    dt, asin, title, brand, category, price_usd, coupon_flag,
+                    bsr, rating, review_count, seller_count, prime_flag,
+                    image_count, video_flag, first_seen_date, last_seen_date
+                ) VALUES (
+                    %(dt)s, %(asin)s, %(title)s, %(brand)s, %(category)s,
+                    %(price_usd)s, %(coupon_flag)s, %(bsr)s, %(rating)s,
+                    %(review_count)s, %(seller_count)s, %(prime_flag)s,
+                    %(image_count)s, %(video_flag)s, %(first_seen_date)s, %(last_seen_date)s
+                )
+                ON CONFLICT (dt, asin) DO UPDATE SET
+                    title = EXCLUDED.title,
+                    brand = EXCLUDED.brand,
+                    category = EXCLUDED.category,
+                    price_usd = EXCLUDED.price_usd,
+                    coupon_flag = EXCLUDED.coupon_flag,
+                    bsr = EXCLUDED.bsr,
+                    rating = EXCLUDED.rating,
+                    review_count = EXCLUDED.review_count,
+                    seller_count = EXCLUDED.seller_count,
+                    prime_flag = EXCLUDED.prime_flag,
+                    image_count = EXCLUDED.image_count,
+                    video_flag = EXCLUDED.video_flag,
+                    last_seen_date = EXCLUDED.last_seen_date
+            """, listing_data)
     
     logger.debug(f"Stored listing for {asin} on {dt}")
 

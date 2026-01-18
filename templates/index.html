@@ -5,63 +5,165 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Winner Engine - Product Opportunity Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🏆 Winner Engine</h1>
-            <p class="subtitle">Product Opportunity Discovery System</p>
-        </header>
-
-        <div class="stats-bar">
-            <div class="stat-card">
-                <div class="stat-value" id="entity-count">-</div>
-                <div class="stat-label">Entities Tracked</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="amazon-count">-</div>
-                <div class="stat-label">Amazon Listings</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="tiktok-count">-</div>
-                <div class="stat-label">TikTok Metrics</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="latest-report">-</div>
-                <div class="stat-label">Latest Report</div>
-            </div>
-        </div>
-
-        <div class="main-content">
-            <div class="sidebar">
-                <h2>Reports</h2>
-                <div id="reports-list" class="reports-list">
-                    <div class="loading">Loading reports...</div>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="logo">
+                        <span class="logo-icon">🏆</span>
+                        <div>
+                            <h1>Winner Engine</h1>
+                            <p class="subtitle">Product Opportunity Discovery System</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="icon-btn" id="theme-toggle" title="Toggle theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button class="icon-btn" id="refresh-btn-header" title="Refresh data">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
                 </div>
             </div>
+        </header>
 
-            <div class="content-area">
+        <!-- Stats Dashboard -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="entity-count">
+                            <span class="skeleton-text">---</span>
+                        </div>
+                        <div class="stat-label">Entities Tracked</div>
+                        <div class="stat-trend">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>Active</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon amazon">
+                        <i class="fab fa-amazon"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="amazon-count">
+                            <span class="skeleton-text">---</span>
+                        </div>
+                        <div class="stat-label">Amazon Listings</div>
+                        <div class="stat-trend">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Monitoring</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon tiktok">
+                        <i class="fab fa-tiktok"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="tiktok-count">
+                            <span class="skeleton-text">---</span>
+                        </div>
+                        <div class="stat-label">TikTok Metrics</div>
+                        <div class="stat-trend">
+                            <i class="fas fa-fire"></i>
+                            <span>Trending</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon report">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="latest-report">
+                            <span class="skeleton-text">---</span>
+                        </div>
+                        <div class="stat-label">Latest Report</div>
+                        <div class="stat-trend">
+                            <i class="fas fa-calendar"></i>
+                            <span>Weekly</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <div class="main-layout">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h2>
+                        <i class="fas fa-list"></i>
+                        Reports
+                    </h2>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-reports" placeholder="Search reports...">
+                    </div>
+                </div>
+                <div id="reports-list" class="reports-list">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p>Loading reports...</p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Content Area -->
+            <main class="content-area">
                 <div class="content-header">
-                    <h2 id="content-title">Select a Report</h2>
-                    <div class="controls">
-                        <select id="week-select" class="select-input">
-                            <option value="">Select Week...</option>
-                        </select>
-                        <button id="refresh-btn" class="btn-primary">Refresh</button>
+                    <div class="content-title-section">
+                        <h2 id="content-title">Select a Report</h2>
+                        <p class="content-subtitle" id="content-subtitle">Choose a week to view opportunities</p>
+                    </div>
+                    <div class="content-controls">
+                        <div class="select-wrapper">
+                            <i class="fas fa-calendar-alt"></i>
+                            <select id="week-select" class="select-input">
+                                <option value="">Select Week...</option>
+                            </select>
+                        </div>
+                        <button id="refresh-btn" class="btn-primary">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>Refresh</span>
+                        </button>
                     </div>
                 </div>
 
                 <div id="opportunities-container" class="opportunities-container">
                     <div class="empty-state">
-                        <p>👆 Select a week to view opportunities</p>
+                        <div class="empty-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3>No Report Selected</h3>
+                        <p>👆 Select a week from the sidebar to view opportunities</p>
                     </div>
                 </div>
-            </div>
+            </main>
         </div>
     </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner-large"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
-

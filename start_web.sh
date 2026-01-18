@@ -19,7 +19,8 @@ fi
 
 echo "Starting web server..."
 echo ""
-echo "🌐 Open your browser to: http://localhost:5000"
+echo "🌐 Open your browser to: http://localhost:5001"
+echo "   (Using port 5001 to avoid macOS AirPlay on port 5000)"
 echo ""
 echo "Press Ctrl+C to stop"
 echo ""
